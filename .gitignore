@@ -5,3 +5,4 @@ DS_Store
 .bundler/
 .vscode/
 _site/
+.DS_Store
