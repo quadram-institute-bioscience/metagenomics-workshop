@@ -10,7 +10,6 @@ title: "Before we start"
 * *Optional*: ability to write simple bash scripts, perform `for` loops, using Bash variables (like `$REFERENCE`)
 
 
- 
 ### Suggested readings
 
 - **"[Metagenomic approaches in microbial ecology: an update on whole-genome and marker gene sequencing analysis](https://pmc.ncbi.nlm.nih.gov/articles/PMC7641418/)" (2020, PMC7641418)**  
