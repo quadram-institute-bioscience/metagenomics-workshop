@@ -25,5 +25,64 @@ mamba create -n mapping -c conda-forge -c bioconda \
   minimap2 bwa samtools bamtocov coverm multiqc
 ```
 
+To use the environment you will typically type:
+
+```bash
+conda activate mapping
+```
+
 ### Backmapping Illumina reads with Minimap2
 
+![mapping scheme from Galaxy (1)]({{ site.baseurl}}/{% link img/mapping.png %})
+
+Minimap2 can be used to map Illumina reads to a reference assembly using the `-x sr` preset for short reads. Here is an example command:
+
+```bash
+minimap2 -a -t 8 -x sr assembly.fasta reads_R1.fastq.gz reads_R2.fastq.gz > mapped_reads.sam
+```
+
+* `-a`: Output in SAM format (default is PAF)
+* `-t 8`: Use 8 threads for parallel processing
+* `-x sr`: Preset for **s**hort **r**eads (Illumina)
+
+The [SAM format](https://telatin.github.io/microbiome-bioinformatics/Bash-SAM/#:~:text=The%20SAM%20format%20is) can be converted to a more compact BAM format using `samtools`, and it's very common to sort the BAM file (by contig and position) for downstream analyses.
+
+```bash
+samtools view -bS mapped_reads.sam | samtools sort -@ 4 -o mapped_reads.sorted.bam
+samtools index mapped_reads.sorted.bam
+```
+
+* `-b`: Output in BAM format (can be omitted in recent versions of samtools), used by *samtools view*
+* `-S`: Convert SAM to BAM (default is output in SAM), used by *samtools view*
+* `-o`: Output file name, used by *samtools sort*
+* `-@ 4`: Use 4 threads for sorting, used by *samtools sort*
+
+We can map and save to a sorted BAM file in one step like this:
+
+```bash
+# Map & sort in one step
+minimap2 -t 8 -ax sr assembly.fasta reads_R1.fastq.gz reads_R2.fastq.gz | \
+  samtools view -bS - | samtools sort -@ 4 -o mapped_reads.sorted.bam 
+
+# Index the sorted BAM file
+samtools index mapped_reads.sorted.bam
+```
+
+### Coverage 
+
+![IGV screenshot]({{ site.baseurl}}/{% link img/coverage.png %})
+
+The **coverage** is defined as the amount of times a nucleotide is read during the sequencing process. In other words, it indicates how many reads overlap a specific position in the reference sequence. Usually we refer to the **average coverage** of a contig or genome, which is calculated by averaging the coverage values across all nucleotide positions in that contig or genome.
+
+The amount of sequenced nucleotides spanning a base is more specifically called **sequence coverage**, while the number of fragments (i.e. the two paired-end reads and the insert between them) spanning a base is called **physical coverage**.
+
+There are several ways to calculate the coverage from a BAM file. One simple way is to use `samtools depth`, which outputs the depth of coverage at each position in the reference.
+
+```bash
+samtools depth mapped_reads.sorted.bam > coverage.txt
+```
+
+
+---
+
+<small>[1] Image source: [training.galaxyproject.org](https://training.galaxyproject.org/training-material/topics/sequence-analysis/images/mapping/mapping.png)</small>
