@@ -101,3 +101,24 @@ The bare metrics can be obtained with SeqFu:
 ```bash
 seqfu stats -ntb minia-dir/*.fa
 ```
+
+## Renaming contigs
+
+Each assembler use a different naming scheme for the contigs they produce. Some downstream tools (especially Anvi'o),
+might be picky on which characters are allowed.
+It's safe to rename them, and using SeqFu we can also keep a conversion table:
+
+```bash
+# This will produce `rename-report.txt`: a two columns table 
+seqfu cat --anvio $ORIGINAL_CONTIGS > renamed_contigs.fa
+```
+
+The `--anvio` is a shortcut for 
+```bash
+seqfu cat -p c_ -s -z --zero-pad 12 --report rename_report.txt  $ORIGINAL_CONTIGS > renamed_contigs.fa
+```
+Where:
+* `-p "c_"` means use the string `c_` as the prefix of all names
+* `-s` (or `--strip-comments`) means remove any comment
+* `-z` (or `--strip-name`) means remove the original name
+* `--zero-pad 12` means use leading zeroes against the progressive number (12 digits) 
