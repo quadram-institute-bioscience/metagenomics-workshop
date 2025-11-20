@@ -20,3 +20,4 @@ In terms of tools we will:
 5. See how to perform the *backmapping* (sometimes called read recruitment), and what information we can extract from the *coverage tracks*
 6. Try to group contigs belonging to the same genome (*Binning*), using **SemiBin2**
 7. Evaluate the completeness and contamination of bins (**BUSCO**), and see how to dereplicate them with **dRep** 
+
