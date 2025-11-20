@@ -13,6 +13,9 @@ The goal is to present:
 2. The difference between read based approaches (profiling) and *de novo* assembly (MAGs)
 3. How to evaluate the quality of the sequencing and how to remove unwanted reads (QC, host removal,...)
 
+
+### What we will learn to do 
+
 In terms of tools we will:
 
 1. Remove host reads using **Hostile**
