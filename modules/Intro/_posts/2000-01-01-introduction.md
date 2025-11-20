@@ -2,6 +2,8 @@
 title: About this course
 ---
 
+![Introduction]({{ site.baseurl}}/{% link img/workflow_small.png %})
+
 This workshops introduces some core concepts and basic skills in the
 analysis of **whole metagenome shotgun** experiments.
 
