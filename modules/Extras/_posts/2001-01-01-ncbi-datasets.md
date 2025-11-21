@@ -2,6 +2,10 @@
 title: NCBI datasets
 ---
 
+> "datasets" is a command-line tool to programmatically download genomes and annotations
+> from NCBI.
+
+[dataset schematics](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/datasets_schema_taxonomy.svg)
 
 ## What is NCBI "datasets"?
  
