@@ -49,49 +49,13 @@ With dereplication: one high-quality representative per species, clean non-redun
 ### Understanding ANI Thresholds
 
 **Average Nucleotide Identity (ANI)** measures genome-wide sequence similarity:
-- **â‰¥95% ANI:** Same species
-- **â‰¥99% ANI:** Very close strains
+- **>95% ANI:** Same species
+- **>99% ANI:** Very close strains
 - **<95% ANI:** Different species
 
 The 95% threshold roughly equals the traditional 70% DNA-DNA hybridization species definition.
 
 ---
-
-## Exploring dRep Results in R
-
-### Open RStudio
-
-**[Link to R Markdown: dRep and GTDB-Tk Exploration](LINK_TO_DREP_GTDBTK_RMD)**
-
-In this R session, you'll:
-1. Load dRep clustering results
-2. Explore how many species-level clusters were found
-3. Examine which bins grouped together
-4. Identify the final representative MAGs
-5. Load GTDB-Tk taxonomy assignments
-6. Merge all results (Tiara, CheckM2, dRep, GTDB-Tk)
-7. Investigate the relationship between quality and taxonomy confidence
-
-### Key Questions to Explore
-
-**Q1:** How much redundancy did dRep remove?
-- Input bins vs final representatives
-- Typical reduction: 50-80%!
-
-**Q2:** Which clusters have multiple bins?
-- Could indicate real strain variation across timepoints
-- Or technical redundancy from multiple assemblies
-
-**Q3:** Which assembly strategy contributed more representatives?
-- Individual assemblies vs co-assembly
-- Does one strategy produce better quality MAGs?
-
-**Q4:** How many representatives have taxonomy assigned?
-- Should be most (if they're bacterial)
-- Eukaryotic bins won't get GTDB-Tk classification
-
----
-
 ## GTDB-Tk: Taxonomy Assignment
 
 ### What is GTDB-Tk?
@@ -130,6 +94,36 @@ d__Bacteria;p__Bacillota;c__Bacilli;o__Lactobacillales;f__Lactobacillaceae;g__La
 - `f__` = Family
 - `g__` = Genus
 - `s__` = Species
+
+---
+
+## Exploring dRep and GTDB-TK Results in R
+
+### Open RStudio
+
+**[Link to R Markdown: dRep and GTDB-Tk Exploration](LINK_TO_DREP_GTDBTK_RMD)**
+
+In this R session, you'll:
+1. Load dRep clustering results
+2. Explore how many species-level clusters were found
+3. Examine which bins grouped together
+4. Identify the final representative MAGs
+5. Load GTDB-Tk taxonomy assignments
+6. Merge all results (Tiara, CheckM2, dRep, GTDB-Tk)
+7. Investigate the relationship between quality and taxonomy confidence
+
+### Key Questions to Explore
+
+**Q1:** How much redundancy did dRep remove?
+- Input bins vs final representatives
+
+**Q2:** Which clusters have multiple bins?
+- Could indicate real strain variation across timepoints
+- Or technical redundancy from multiple assemblies
+
+**Q3:** How many representatives have taxonomy assigned?
+- Should be most of the high quality bins (if they're bacterial)
+- Eukaryotic bins won't get GTDB-Tk classification
 
 ---
 
