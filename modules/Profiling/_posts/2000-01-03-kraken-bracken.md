@@ -52,7 +52,7 @@ title: "Kraken2 & Bracken"
 
 ⚠️ **Higher false positive rate** - Especially for low-abundance taxa  
 ⚠️ **Reports read counts** - Not normalized for genome size  
-⚠️ **High memory usage** - Full databases require 50-100+ GB RAM  
+⚠️ **High memory usage** - Full databases require a good amount RAM (to run on the HPC)
 ⚠️ **Many reads at higher levels** - Reads classified to genus/family rather than species  
 
 ---
@@ -116,8 +116,15 @@ Kraken2 is very good at **classifying reads**, but has a problem:
 
 Make sure you have:
 - Access to the workshop notebook
-- Data symlinked to your workspace
+- Data symlinked/copied to your workspace
 - Kraken2 conda environment available
+
+```bash
+conda deactivate
+
+conda activate /shared/team/conda/aliseponsero.mmb-dtp/kraken2
+```
+
 - RStudio access on the notebook
 
 ---
@@ -166,7 +173,7 @@ Kraken2 offers many pre-built database options (see https://benlangmead.github.i
 
 ```bash
 conda deactivate  # If you were in metaphlan environment
-conda activate kraken2
+conda activate /shared/team/conda/aliseponsero.mmb-dtp/kraken2
 ```
 
 ### Step 2: Check Installation
@@ -195,29 +202,23 @@ kraken2 --help
 ```bash
 kraken2 --db [DATABASE_PATH] \
     --threads [N] \
-    --quick \
     --report [REPORT_FILE] \
     --output [OUTPUT_FILE] \
     --paired [FORWARD] [REVERSE]
 ```
 
-**Example command for our dataset:**
-```bash
-kraken2 --db /shared/team/2025_training/week5/databases/kraken2 \
-    --threads 16 \
-    --quick \
-    --report results/kraken2/subset_kraken2.report \
-    --output results/kraken2/subset_kraken2.output \
-    --paired raw/subset_1.fastq.gz raw/subset_2.fastq.gz
-```
-
 💡 **Tip:** The `--output` file is very large (one line per read). For most analyses, you only need the `--report` file.
+
+**This would normally take 5-15 minutes, but we'll look at precomputed results.**
+
 
 ---
 
 ## Part 3: Understanding Kraken2 Output
 
 ### Kraken2 Report Format
+
+Open a Kraken precomputed output (e.g. T0_ERR2231567_profiles.txt)
 
 The report file is tab-delimited with 6 columns:
 
@@ -264,7 +265,7 @@ The report file is tab-delimited with 6 columns:
 ### Step 1: Check Bracken Installation
 
 ```bash
-bracken -h
+bracken -v
 ```
 
 ### Step 2: Check Available Read Lengths
@@ -310,10 +311,12 @@ bracken -d [DATABASE_PATH] \
 
 **Example command:**
 ```bash
+mkdir test_bracken
+
 bracken -d /shared/team/2025_training/week5/databases/kraken2 \
-    -i results/kraken2/subset_kraken2.report \
-    -o results/bracken/subset_bracken_species.txt \
-    -w results/bracken/subset_bracken_species.report \
+    -i Session1_profiling/Kraken2/T0_ERR2231567_profiles.txt \
+    -o test_bracken/subset_bracken_species.txt \
+    -w test_bracken/subset_bracken_species.report \
     -r 150 \
     -l S \
     -t 10
@@ -355,231 +358,80 @@ Open RStudio on your notebook and follow along!
 library(tidyverse)
 ```
 
-### Read Kraken2 Report
-
-```r
-# Read the Kraken2 report (precomputed)
-kraken <- read_tsv("tax_profiles/Kraken2/ERR2231567_profiles.txt",
-                   col_names = c("pct_reads", "reads_clade", "reads_taxon", 
-                                "rank", "taxid", "name"),
-                   show_col_types = FALSE)
-
-# Look at structure
-kraken %>% head(20)
-
-# Check unclassified percentage (first row)
-unclassified <- kraken %>% 
-  filter(rank == "U")
-
-cat("Unclassified percentage:", unclassified$pct_reads, "%\n")
-
-# Count species detected
-n_species_kraken <- kraken %>%
-  filter(rank == "S") %>%
-  nrow()
-
-cat("Species detected by Kraken2:", n_species_kraken, "\n")
-```
-
 ### Read Bracken Output
 
 ```r
 # Read the Bracken output
-bracken <- read_tsv("tax_profiles/Bracken/ERR2231567_profiles.txt",
+MYDIR="/shared/team/users/{your_name}/"
+
+bracken <- read_tsv(paste(MYDIR, "Session1_profiling/Bracken/T0_ERR2231567_profiles.txt", sep="/"),
                     show_col_types = FALSE)
 
-# Look at the structure
-bracken %>% head(10)
-
-# Check how many species
-n_bracken_species <- bracken %>% nrow()
-cat("Number of species in Bracken:", n_bracken_species, "\n")
 ```
 
-### Show Species That Gained Reads
+### Compare Bracken to MetaPhlAn4:
 
 ```r
-# Find species that gained reads from redistribution
-species_with_added <- bracken %>%
-  filter(added_reads > 0) %>%
-  arrange(desc(added_reads)) %>%
-  select(name, kraken_assigned_reads, added_reads, new_est_reads)
+# Subset Bracken species
+bracken_rel <- bracken %>% filter(fraction_total_reads>0) %>%
+    mutate(relative_abundance=fraction_total_reads*100) %>%
+    arrange(desc(relative_abundance))
 
-cat("\nTop 10 species that gained reads from redistribution:\n")
-species_with_added %>% 
-  head(10) %>%
-  print()
-
-# Summary statistics
-cat("\nRedistribution summary:\n")
-cat("Species with added reads:", nrow(species_with_added), 
-    "out of", n_bracken_species, "\n")
-cat("Total reads redistributed:", sum(bracken$added_reads), "\n")
-```
-
-### Convert Bracken to Relative Abundances
-
-```r
-# Calculate relative abundances from read counts
-bracken_rel <- bracken %>%
-  mutate(relative_abundance = (new_est_reads / sum(new_est_reads)) * 100) %>%
-  arrange(desc(relative_abundance)) %>%
-  select(name, new_est_reads, relative_abundance, added_reads)
-
-cat("\nTop 10 species by relative abundance (Bracken):\n")
-bracken_rel %>% 
-  head(10) %>%
-  print()
-```
-
-### Visualize Bracken Results
-
-```r
-# Bar plot of top 10 species
-bracken_rel %>%
-  head(10) %>%
-  mutate(name = str_trunc(name, 40)) %>%
-  mutate(name = fct_reorder(name, relative_abundance)) %>%
-  ggplot(aes(x = name, y = relative_abundance)) +
-  geom_col(fill = "coral") +
-  coord_flip() +
-  labs(title = "Top 10 Species (Bracken) in ERR2231567",
-       x = "Species",
-       y = "Relative Abundance (%)") +
-  theme_minimal()
-```
-
-### Show Which Species Got Reads Added
-
-```r
-# Visualize read redistribution
-bracken %>%
-  filter(added_reads > 0) %>%
-  arrange(desc(added_reads)) %>%
-  head(15) %>%
-  mutate(name = str_trunc(name, 35)) %>%
-  mutate(name = fct_reorder(name, added_reads)) %>%
-  ggplot(aes(x = name, y = added_reads)) +
-  geom_col(fill = "steelblue") +
-  coord_flip() +
-  labs(title = "Species Gaining Most Reads from Bracken Redistribution",
-       x = "Species",
-       y = "Reads Added") +
-  theme_minimal()
-```
-
----
-
-## Part 7: Compare to MetaPhlAn4
-
-### Load MetaPhlAn4 Results
-
-```r
-# Read MetaPhlAn4 profile (from previous section)
-metaphlan <- read_tsv("tax_profiles/metaphlan4/ERR2231567.profile.txt",
-                      comment = "#",
-                      show_col_types = FALSE)
-
-# Extract species
-metaphlan_species <- metaphlan %>%
+# Get MetaPhlAn4 species
+profile_no_uncl <- read_tsv(paste(MYDIR, "Session1_profiling/Metaphlan/T0_ERR2231567.profile.txt", sep="/"), 
+                    skip = 4,
+                    show_col_types = FALSE) %>%
+        rename("clade_name"=`#clade_name`)
+        
+metaphlan_species <- profile_no_uncl %>%
   filter(str_detect(clade_name, "s__"),
          !str_detect(clade_name, "t__")) %>%
   mutate(species_name = str_extract(clade_name, "s__[^|]+$")) %>%
   mutate(species_name = str_remove(species_name, "s__")) %>%
   mutate(species_name = str_replace_all(species_name, "_", " ")) %>%
-  select(species_name, metaphlan_abundance = 2) %>%
-  arrange(desc(metaphlan_abundance))
-```
+  select(species_name, relative_abundance) %>%
+  arrange(desc(relative_abundance))
 
-### Compare Species Counts
-
-```r
+# Compare species counts
 cat("\n=== Method Comparison ===\n")
 cat("MetaPhlAn4 species detected:", nrow(metaphlan_species), "\n")
-cat("Kraken2 species detected:", n_species_kraken, "\n")
-cat("Bracken species detected:", nrow(bracken_rel), "\n")
-```
+cat("Bracken species detected:", nrow(bracken), "\n")
 
-### Side-by-Side Top 10 Comparison
-
-```r
-# Create comparison table
+# Show top 10 from each method side-by-side
+cat("\nTop 10 species comparison:\n")
 comparison <- tibble(
   Rank = 1:10,
   MetaPhlAn4 = metaphlan_species$species_name[1:10],
-  `MetaPhlAn4_%` = round(metaphlan_species$metaphlan_abundance[1:10], 2),
+  `MetaPhlAn4_%` = round(metaphlan_species$relative_abundance[1:10]),
   Bracken = bracken_rel$name[1:10],
-  `Bracken_%` = round(bracken_rel$relative_abundance[1:10], 2)
+  `Bracken_%` = round(bracken_rel$relative_abundance[1:10])
 )
 
-cat("\nTop 10 species comparison:\n")
 print(comparison)
 ```
 
-### Visualize Method Comparison
+
+### Visualize Bracken Results
 
 ```r
-# Prepare data for plotting
-top10_metaphlan <- metaphlan_species %>%
-  head(10) %>%
-  mutate(method = "MetaPhlAn4",
-         abundance = metaphlan_abundance,
-         species = species_name) %>%
-  select(species, abundance, method)
+bracken_grouped <- bracken_rel %>%
+    mutate(species_name=ifelse(relative_abundance<5, "Other", name)) %>%
+    group_by(species_name) %>%
+    summarize(relative_abundance=sum(relative_abundance)) %>%
+    select(species_name, relative_abundance)
 
-top10_bracken <- bracken_rel %>%
-  head(10) %>%
-  mutate(method = "Bracken",
-         abundance = relative_abundance,
-         species = name) %>%
-  select(species, abundance, method)
 
-# Combine
-combined <- bind_rows(top10_metaphlan, top10_bracken)
-
-# Plot
-ggplot(combined, aes(x = reorder(species, abundance), y = abundance, fill = method)) +
-  geom_col(position = "dodge") +
+bracken_grouped %>%
+  mutate(sample="T0") %>%
+  ggplot(aes(x = sample, y = relative_abundance, fill=species_name)) +
+  geom_bar(stat="identity") +
   coord_flip() +
-  labs(title = "Top Species: MetaPhlAn4 vs Bracken",
+  labs(title = "Species composition at T0",
        x = "Species",
-       y = "Relative Abundance (%)",
-       fill = "Method") +
-  scale_fill_manual(values = c("MetaPhlAn4" = "steelblue", "Bracken" = "coral")) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+       y = "Relative Abundance (%)") +
+  theme_minimal()
 ```
 
-### Compare Unclassified Fractions
-
-```r
-# Get unclassified percentages
-metaphlan_unclass <- metaphlan %>%
-  filter(clade_name == "UNCLASSIFIED") %>%
-  pull(2)
-
-kraken_unclass <- kraken %>%
-  filter(rank == "U") %>%
-  pull(pct_reads)
-
-# Compare
-comparison_unclass <- tibble(
-  Method = c("MetaPhlAn4", "Kraken2"),
-  Unclassified_Percent = c(metaphlan_unclass, kraken_unclass)
-)
-
-cat("\n=== Unclassified Comparison ===\n")
-print(comparison_unclass)
-
-# Visualize
-ggplot(comparison_unclass, aes(x = Method, y = Unclassified_Percent, fill = Method)) +
-  geom_col() +
-  labs(title = "Unclassified Reads Comparison",
-       y = "Unclassified (%)") +
-  scale_fill_manual(values = c("MetaPhlAn4" = "steelblue", "Kraken2" = "coral")) +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
 
 ---
 
