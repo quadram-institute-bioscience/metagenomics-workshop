@@ -79,6 +79,18 @@ You will find two fasta files in the output directory: `minia-assembly/T16.conti
 
 2. **Contigs** are longer sequences formed by merging unitigs after cleaning the graph to remove bubbles, tips, and ambiguities.
 
+#### Minia contig names
+
+Fields:
+
+* `>0`, `>1`, `>2` - Contig identifier
+* `LN:i:487` - Length in base pairs (integer)
+* `KC:i:2566` - K-mer Count - total number of k-mers in this contig (integer)
+* `km:f:5.741` - K-mer mean abundance - average coverage/depth (float)
+* `L:+:6051:+` - Links to other contigs in the assembly graph, format: "L:orientation_this:target_contig:orientation_target"
++ or - indicates forward/reverse strand orientation
+
+
 ### Using MEGAHIT
 
 Megahit syntax is similar, but it supports paired end reads via separate arguments. The output directory will contain all the files produced.
@@ -86,6 +98,9 @@ Megahit syntax is similar, but it supports paired end reads via separate argumen
 ```bash
 megahit -1 $R1 -2 $R2 -o megahit-assembly/T16/ -t 8
 ```
+
+* Output contigs will be in `megahit-assembly/T16/final.contigs.fa`
+* The name will contain information about the coverage as `multi=....` and the connectivity of a contig in the assembly graph. `flag=1` means the contig is standalone, `flag=2` a looped path and `flag=0` for other contigs.
 
 ### Comparing the assemblies metrics
 
@@ -106,6 +121,9 @@ seqfu stats -ntb minia-dir/*.fa
 
 Each assembler use a different naming scheme for the contigs they produce. Some downstream tools (especially Anvi'o),
 might be picky on which characters are allowed.
+
+:warning: Check the output file to see what information the assembler encoded in the contig names.
+
 It's safe to rename them, and using SeqFu we can also keep a conversion table:
 
 ```bash

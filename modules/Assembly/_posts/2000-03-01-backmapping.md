@@ -74,8 +74,12 @@ samtools index mapped_reads.sorted.bam
 
 The **coverage** is defined as the amount of times a nucleotide is read during the sequencing process. In other words, it indicates how many reads overlap a specific position in the reference sequence. Usually we refer to the **average coverage** of a contig or genome, which is calculated by averaging the coverage values across all nucleotide positions in that contig or genome.
 
+![physical coverage]({{ site.baseurl}}/{% link img/phycov.png %})
+
 The amount of sequenced nucleotides spanning a base is more specifically called **sequence coverage**, while the number of fragments (i.e. the two paired-end reads and the insert between them) spanning a base is called **physical coverage**.
 
+
+![misassembly]({{ site.baseurl}}/{% link img/misassembly.png %})
 There are several ways to calculate the coverage from a BAM file. One simple way is to use `samtools depth`, which outputs the depth of coverage at each position in the reference.
 
 ```bash
