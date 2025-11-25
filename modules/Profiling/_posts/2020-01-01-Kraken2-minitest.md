@@ -77,6 +77,7 @@ kraken2 --db /shared/public/db/kraken2/pluspf_16gb/ \
 ```
 
 **Parameters:**
+
 - `--db`: Path to Kraken2 database (PlusPF 16GB version)
 - `--memory-mapping`: Load database into memory for faster processing
 - `--threads 8`: Use 8 CPU threads
@@ -96,3 +97,12 @@ Explore tha "raw" output: this is the *per-read* classification made by Kraken2.
 :bulb: use `less -S` or `vd` to have a first look. Then you can use `cut`, `sort`, `uniq -c` on specific columns.
 
 The report file (`bwa.tsv`) contains the summary of classifications at different taxonomic levels. It aggregates the results from the raw output.
+
+:bulb: Try using Metaphlan, can you check if there is a higher specificity (lower false positive rate) compared to Kraken2?
+
+## Output files
+
+* [Kraken2 report (default parameters)](https://gist.github.com/telatin/068581b1d063b227cbd801ab993ba808)
+  * [Kraken2 raw output (first lines)](https://gist.github.com/telatin/d04e83580992491afe1193f44c2627f1)
+* [Kraken2 report (confidence=0.1)](https://gist.github.com/telatin/91ee68d4750c39fa55e52ab6437d2ff3)
+* [Metaphlan report](https://gist.github.com/telatin/5d943d3be02cf83f3c0cca3a640c5bc0)
