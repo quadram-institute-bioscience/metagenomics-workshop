@@ -13,6 +13,8 @@ In this section, you'll learn to:
 - **Understand classification confidence** and its relationship to MAG quality
 - **Compare assembly strategies** for MAG recovery
 
+**The Workshop material** is available to download in [Figshare](https://figshare.com/articles/presentation/MMB_DTP_workshop_-_Introduction_to_binning_of_metagenomes/30724289)
+
 ---
 
 ## dRep: Dereplication and Representative Selection
@@ -101,7 +103,7 @@ d__Bacteria;p__Bacillota;c__Bacilli;o__Lactobacillales;f__Lactobacillaceae;g__La
 
 ### Open RStudio
 
-**[Link to R Markdown: dRep and GTDB-Tk Exploration](LINK_TO_DREP_GTDBTK_RMD)**
+**[Link to R Markdown: dRep and GTDB-Tk Exploration](https://figshare.com/articles/presentation/MMB_DTP_workshop_-_Introduction_to_binning_of_metagenomes/30724289)**
 
 In this R session, you'll:
 1. Load dRep clustering results
