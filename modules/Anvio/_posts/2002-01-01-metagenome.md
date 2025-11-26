@@ -142,3 +142,8 @@ anvi-summarize -p MERGED_PROFILE/PROFILE.db \
     -o SUMMARY
 ```
 
+## ☕️ Our coffee data
+
+If you want to download a co-assembly of the "Early" samples:
+
+* [Download coffee metagenome data](https://www.dropbox.com/scl/fo/ivkohz4a8hq1q7eyznybr/AIwK-KcBmNRUg-iPOBhwFJA?rlkey=qbmaiy0i0g4eizrg8nndgrm93&dl=0)
