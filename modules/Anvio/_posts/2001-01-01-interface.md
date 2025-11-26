@@ -52,11 +52,13 @@ You will see the panel with the controls, but to render the actual data you need
 
 ![button]({{ site.baseurl}}/{% link img/draw.png %})
 
-:mag: try to zoom and pan the view using your mouse or the controls on the left side of the interface.
+* :mag: try to zoom and pan the view using your mouse or the controls on the left side of the interface.
 
-:palette: try changing the colours of some layers
+* 🎨 try changing the colours of some layers
 
-↖ try using the "Data" pane to inspect what the mouse is pointing at
+* ↖ try using the "Data" pane to inspect what the mouse is pointing at
+
+![colors]({{ site.baseurl}}/{% link img/interface-col.png %})
 
 ## Where is the dendrogram?
 
@@ -82,3 +84,47 @@ anvi-interactive --manual -d data.txt \
     --tree tree.txt  
 ```
 
+
+:bulb: So far we used a text file as input, in typical workflows we will generate special databases from genomics file.
+
+## Adding metadata
+
+We can also add metadata to our dataset, for example to group samples by some characteristics.
+
+For example:
+
+Metagenome | Body_Site             | Body_Subsite         | Host_Gender
+-----------|-----------------------|----------------------|------------
+SRS011061  | GastrointestinalTract | Stool                | Female
+SRS011090  | Oral                  | Buccal_mucosa        | Female
+SRS011098  | Oral                  | Supragingival_plaque | Female
+SRS011126  | Oral                  | Supragingival_plaque | Male
+
+We can download a metadata file with this information:
+
+```bash
+wget http://merenlab.org/tutorials/interactive-interface/files/additional-items-data.txt
+```
+
+First, we need to import the metadata into Anvi'o:
+
+```bash
+anvi-import-misc-data additional-items-data.txt \
+                         --target-data-table items \
+                         --pan-or-profile-db profile.db
+```
+
+then we can re-launch the interface:
+
+```bash
+anvi-interactive -d data.txt \
+                    -p profile.db \
+                    --title "Taxonomic profiles of 690 HMP metagenomes" \
+                    --tree tree.txt \
+                    --manual
+```
+
+---
+
+> **:bulb: What's next?**
+> There is an interesting tutorial on [Trichodesmium](https://anvio.org/tutorials/trichodesmium-tutorial/), that will guide you through a complete workflow.
