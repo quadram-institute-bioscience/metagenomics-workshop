@@ -1,5 +1,9 @@
 # Kraken2 small exercise
 
+> Try using Kraken2 (and maybe metaphlan or other tools as well) on very
+> simple datasets.
+
+
 This small exercise allows to tinker with Kraken2 in a simplified dataset.
 
 We'll download a reference genome, simulate sequencing reads, and classify them to verify the classification accuracy.

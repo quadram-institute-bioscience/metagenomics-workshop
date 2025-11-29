@@ -68,8 +68,9 @@ However, we can generate a dendrogram based on the data in the matrix. This can 
 
 ```bash
 anvi-matrix-to-newick data.txt \
-                         -o tree.txt
+     -o tree.txt
 
+# Wanna peek inside the output?
 less tree.txt
 ```
 
@@ -110,18 +111,18 @@ First, we need to import the metadata into Anvi'o:
 
 ```bash
 anvi-import-misc-data additional-items-data.txt \
-                         --target-data-table items \
-                         --pan-or-profile-db profile.db
+      --target-data-table items \
+      --pan-or-profile-db profile.db
 ```
 
 then we can re-launch the interface:
 
 ```bash
 anvi-interactive -d data.txt \
-                    -p profile.db \
-                    --title "Taxonomic profiles of 690 HMP metagenomes" \
-                    --tree tree.txt \
-                    --manual
+     -p profile.db \
+     --title "Taxonomic profiles of 690 HMP metagenomes" \
+     --tree tree.txt \
+     --manual
 ```
 
 ---
