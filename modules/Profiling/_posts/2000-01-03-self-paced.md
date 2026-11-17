@@ -94,8 +94,6 @@ Upload the 6 MetaPhlAn4 files.
 
 **Q7.** For the same samples, the three tools give different percentages for Lactobacillaceae. Do they agree on the **trend**? Why are the **values** different?
 
-> Hint: go back to the table "What the percentages mean" at the top of this page.
-
 **Q8.** Answer Q2 and Q4 again with the Bracken profiles. Do you get the same answers as with MetaPhlAn4?
 
 ---
@@ -104,17 +102,9 @@ Upload the 6 MetaPhlAn4 files.
 
 **Q9. Human reads.** Search for *Homo sapiens* in the Bracken profiles. What is its abundance at T0? Is it in the MetaPhlAn4 profiles? Why would there be human DNA in a coffee fermentation, and why does only one tool report it?
 
-> Hint: think about what each database contains. Which step of the analysis should have removed these reads?
-
 **Q10. Yeasts.** Look at the Eukaryota in the MetaPhlAn4 profiles. Which organism is detected? Is it in the Bracken profiles? Why?
 
-> Hint: the Standard-8 database contains RefSeq archaea, bacteria, viruses, plasmids and human.
-
-**Q11. The final community.** Which genus is the most abundant at T64 according to MetaPhlAn4? And according to Bracken? Look for *Paucilactobacillus vaccinostercus* in the Kraken2 and Bracken profiles: what do you find?
-
-**Q12. How many species?** How many species are detected in the T0 sample by MetaPhlAn4? And by Bracken? How many species have at least 0.1% abundance in Bracken? What does this tell you about the low-abundance species reported by Kraken2 and Bracken?
-
-> Hint: in the guided hands-on, how many false positives did we find in a community of 5 genomes?
+**Q11. The final community.** Which genus is the most abundant at T64 according to MetaPhlAn4? And according to Bracken?
 
 ---
 
@@ -127,8 +117,6 @@ Upload the 6 MetaPhlAn4 files.
 **S3.** Some MetaPhlAn4 species have names like `Frateuria_SGB93747`. What does "SGB" mean, and why don't these species have a proper name?
 
 **S4.** MetaPhlAn4 percentages include the unclassified fraction. Recalculate the Lactobacillaceae abundance at T64 as a percentage of the **classified** part only. Is it closer to the Bracken value?
-
-> Hint: divide the Lactobacillaceae percentage by (100 - unclassified percentage), then multiply by 100.
 
 ---
 
