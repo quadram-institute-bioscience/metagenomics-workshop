@@ -17,7 +17,7 @@ In this guided session we will run Kraken2 and Bracken together on a small **moc
 
 ## The mock community
 
-The mock dataset contains **500 read pairs** simulated with [InSilicoSeq](https://github.com/HadrienG/InSilicoSeq) (HiSeq error model) from 5 genomes of the HumGut [CITATION NEEDED] collection of human gut genomes.
+The mock dataset contains **500 read pairs** simulated with [InSilicoSeq](https://github.com/HadrienG/InSilicoSeq) (HiSeq error model) from 5 genomes of the [HumGut](https://doi.org/10.1186/s40168-021-01114-w) collection of human gut genomes.
 
 | Genome | Organism (GTDB taxonomy) | Read pairs | Proportion |
 |---|---|---|---|
@@ -41,10 +41,13 @@ conda activate /shared/team/conda/aliseponsero.mmb-dtp/kraken2
 
 DIR="/shared/team/2026_training/week5/day2_profiling/1.Guided_demo"
 DB="${DIR}/k2_standard_08_GB_20261022"
-export WSUSER=/shared/team/users/{your_name}/
 
-mkdir -p $WSUSER/guided_demo
-cd $WSUSER/guided_demo
+USERNAME="my_name" # <<<-- CHANGE ME
+
+export WSUSER=/home/jovyan/shared-team/2026_training/week5/$USERNAME
+
+mkdir -p $WSUSER/D2p1_guided_demo
+cd $WSUSER/D2p1_guided_demo
 ```
 
 ---

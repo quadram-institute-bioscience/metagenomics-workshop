@@ -40,8 +40,12 @@ conda activate /shared/team/conda/aliseponsero.mmb-dtp/kma/
 DIR=/shared/team/2026_training/week5/day2_function
 DBDIR=$DIR/kma_db
 
-mkdir -p $WSUSER/kma
-cd $WSUSER/kma
+USERNAME="my_name" # <<<-- CHANGE ME
+
+export WSUSER=/home/jovyan/shared-team/2026_training/week5/$USERNAME
+
+mkdir -p $WSUSER/D2p2_kma
+cd $WSUSER/D2p2_kma
 ```
 
 We will compare two timepoints: the **start** (T0, ERR2231567) and the **end** (T64, ERR2231572) of the fermentation.
