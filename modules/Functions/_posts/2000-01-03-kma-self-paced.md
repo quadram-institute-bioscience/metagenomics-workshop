@@ -10,6 +10,8 @@ In this exercise, you will search the coffee fermentation reads for these genes,
 
 Work at your own pace, alone or in pairs. Write down your answers: we will discuss them in the recap.
 
+**The Workshop material and slides** is available to download in [Figshare](https://doi.org/10.6084/m9.figshare.35013802)
+
 ---
 
 ## KMA in a nutshell

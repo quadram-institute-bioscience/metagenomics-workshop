@@ -49,12 +49,15 @@ CheckM2 does not check the rRNA and tRNA genes: in this session, "High" only use
 ## Setup
 
 ```bash
-export WSUSER=/shared/team/users/{your_name}/
-DIR=/shared/team/2026_training/week5/day4_MAGs/Guided_tutorial
+DIR="/shared/team/2026_training/week5/day4_MAGs/Guided_tutorial"
 CHECKM2DB=/shared/team/2026_training/week5/day4_MAGs/databases/checkm2/CheckM2_database/uniref100.KO.1.dmnd
 
-mkdir -p $WSUSER/MAGs
-cd $WSUSER/MAGs
+USERNAME="my_name" # <<<-- CHANGE ME
+
+export WSUSER=/home/jovyan/shared-team/2026_training/week5/$USERNAME
+
+mkdir -p $WSUSER/D4p2.MAGs
+cd $WSUSER/D4p2.MAGs
 
 ls $DIR
 ```
@@ -74,7 +77,7 @@ We will look at three bins:
 ```bash
 conda activate /shared/team/conda/aliseponsero.mmb-dtp/tiara
 
-tiara -i $DIR/ERR2231567_SemiBin_9.fa -o tiara_bin9.txt --threads 2
+tiara -i $DIR/ERR2231569_SemiBin_1.fa -o tiara_bin1.txt --threads 2
 ```
 
 - `-i`: the bin (a FASTA file of contigs)
@@ -84,14 +87,14 @@ tiara -i $DIR/ERR2231567_SemiBin_9.fa -o tiara_bin9.txt --threads 2
 The output has one line per contig, with its classification. Look at it, and count the contigs in each class:
 
 ```bash
-head tiara_bin9.txt
+head tiara_bin1.txt
 
-cut -f2 tiara_bin9.txt | sort | uniq -c
+cut -f2 tiara_bin1.txt | sort | uniq -c
 ```
 
-**Your turn:** run Tiara on the two other bins (`ERR2231569_SemiBin_29.fa` and `ERR2231569_SemiBin_12.fa`) and count the classes.
+Q: How would we write a simple loop to run Tiara on all the bins in the folder?
 
-> **Question:** which bin is not bacterial?
+> **Question:** which bin are not bacterial? which bins are mixed?
 
 ---
 
@@ -120,9 +123,10 @@ Fill in the table:
 
 | Bin | Tiara: main class | CheckM2 completeness (%) | CheckM2 contamination (%) | MIMAG tier |
 |---|---|---|---|---|
-| ERR2231567_SemiBin_9 | | | | |
-| ERR2231569_SemiBin_29 | | | | |
-| ERR2231569_SemiBin_12 | | | | |
+| ERR2231569_SemiBin_1 | | | | |
+| ERR2231569_SemiBin_22 | | | | |
+| ERR2231569_SemiBin_29.fa | | | | |
+| ERR2231570_SemiBin_133.fa.fa | | | | |
 
 > **Questions:**
 > - Which bin is a good MAG?
@@ -136,7 +140,7 @@ Fill in the table:
 The same tools (plus GTDB-Tk and dRep) were run on all 249 bins. Copy the R Markdown document:
 
 ```bash
-cp $DIR/Session2_MAGs_guided.Rmd $WSUSER/MAGs/
+cp $DIR/Session4_MAGs_guided.Rmd .
 ```
 
 Open RStudio, open `Session2_MAGs_guided.Rmd`, and run the chunks **in order** (green arrow at the top right of each chunk).

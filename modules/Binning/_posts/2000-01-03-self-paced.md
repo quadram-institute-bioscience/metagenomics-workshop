@@ -32,10 +32,14 @@ ABRicate compares DNA sequences: it does not use protein similarity.
 ```bash
 conda activate /shared/team/conda/aliseponsero.mmb-dtp/abricate
 
-DIR=/shared/team/2026_training/week5/day4_MAGs/Self_guided
+DIR="/shared/team/2026_training/week5/day4_MAGs/Self_guided"
 
-mkdir -p $WSUSER/abricate
-cd $WSUSER/abricate
+USERNAME="my_name" # <<<-- CHANGE ME
+
+export WSUSER=/home/jovyan/shared-team/2026_training/week5/$USERNAME
+
+mkdir -p $WSUSER/D4p3.Abricate
+cd $WSUSER/D4p3.Abricate
 
 ls $DIR
 ```

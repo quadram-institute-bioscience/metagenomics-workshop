@@ -13,6 +13,8 @@ In this guided session we will run Kraken2 and Bracken together on a small **moc
 - Compare both results with the expected composition
 - Visualise the reports with Pavian
 
+**The Workshop material and slides** is available to download in [Figshare](https://doi.org/10.6084/m9.figshare.35013799)
+
 ---
 
 ## The mock community

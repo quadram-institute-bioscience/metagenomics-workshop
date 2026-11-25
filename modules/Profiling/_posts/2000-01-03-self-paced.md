@@ -10,6 +10,8 @@ We have profiled six samples of a coffee bean fermentation with three tools: **M
 
 Work at your own pace, alone or in pairs. Parts 1 to 3 are the core of the exercise; the stretch questions are for those who finish early. Write down your answers: we will discuss them together in the debrief.
 
+**The Workshop material and slides** is available to download in [Figshare](https://doi.org/10.6084/m9.figshare.35013799)
+
 ---
 
 ## The samples
