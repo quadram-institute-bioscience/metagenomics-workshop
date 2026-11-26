@@ -15,11 +15,11 @@ Below are some commonly used assemblers for metagenomic data:
 
 ### Illumina (Short Reads)
 
-- **MEGAHIT**  
+- **MEGAHIT (recommended)**  
   [MEGAHIT](https://github.com/voutcn/megahit) is a fast, memory-efficient assembler designed for large and complex metagenomic datasets. Its multi-k-mer strategy enables accurate assembly from Illumina short reads, making it a popular default choice in many workflows.
 - **metaSPAdes**  
   A variant of the well-known [SPAdes assembler](https://github.com/ablab/spades), metaSPAdes incorporates advanced error correction and assembly graph refinement for high-quality metagenome assemblies. It performs particularly well with datasets that exhibit highly variable coverage. Requires more memory, and is prone to failing due to resource limits on large datasets.
-- **Minia**
+- **Minia (only for special cases)**  
   [Minia](https://github.com/GATB/minia) is a lightweight, memory-efficient assembler that uses a succinct de Bruijn graph representation. It is suitable for assembling large metagenomic datasets on machines with limited RAM, though it may produce more fragmented assemblies compared to other tools.
 
 ### Long Reads (Oxford Nanopore, PacBio)
@@ -29,6 +29,7 @@ Below are some commonly used assemblers for metagenomic data:
 - **metaMDBG**  
   [metaMDBG](https://github.com/GaetanBenoitDev/metaMDBG) stands out for memory efficiency and fast runtime on long-read datasets, offering near-comparable quality to hifiasm-meta in recent studies. Since publication, it has been improved for ONT reads too.
 
+:link: [Online simulator]({{ site.baseurl }}/assets/denovo.html)
 
 ## Installing the tools
 

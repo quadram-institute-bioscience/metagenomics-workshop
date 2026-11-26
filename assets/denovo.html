@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>De novo assembly: shotgun simulator and de Bruijn assembler [QIB Metagenomics Workshop] </title>
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#f5f6f4; --panel:#ffffff; --ink:#1b2230; --muted:#5b6475; --line:#d9dde4;
+  --accent:#1d5fd6; --accent-ink:#ffffff; --soft:#eaf0fb;
+  --c0:#2b6fd8; --c1:#d9822b; --depth:#7a8aa6; --ok:#16794a; --warn:#a85a00; --bad:#b3342a;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151b; --panel:#1a1f28; --ink:#e7eaf0; --muted:#9aa4b6; --line:#2d3441;
+    --accent:#5b9bff; --accent-ink:#0b1220; --soft:#1f2a3f;
+    --c0:#5b9bff; --c1:#f0a255; --depth:#6f7f9c; --ok:#4cc38a; --warn:#f0a255; --bad:#ff7b6e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12151b; --panel:#1a1f28; --ink:#e7eaf0; --muted:#9aa4b6; --line:#2d3441;
+  --accent:#5b9bff; --accent-ink:#0b1220; --soft:#1f2a3f;
+  --c0:#5b9bff; --c1:#f0a255; --depth:#6f7f9c; --ok:#4cc38a; --warn:#f0a255; --bad:#ff7b6e;
+}
+html{scroll-padding-top: env(safe-area-inset-top, 0px); height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);min-height:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.55rem;line-height:1.2;margin:0 0 4px;letter-spacing:-.01em}
+h2{font-size:1.05rem;margin:0 0 10px}
+p.lede{margin:0 0 18px;color:var(--muted);max-width:68ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:600;font-size:.88rem;margin-bottom:4px}
+.hint{color:var(--muted);font-size:.82rem;font-weight:400}
+textarea,input[type=number],input[type=text]{
+  width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+textarea{font-family:var(--mono);font-size:.82rem;line-height:1.45;resize:vertical;min-height:120px;word-break:break-all}
+textarea[readonly]{min-height:90px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem;margin:0;cursor:pointer}
+.check input{width:18px;height:18px;margin:0}
+button{font:inherit;font-weight:600;border-radius:7px;padding:8px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:8px 0 16px}
+.tab{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--muted)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.status{min-height:1.4em;margin:10px 0 0;font-size:.9rem}
+.status.err{color:var(--bad)} .status.ok{color:var(--muted)}
+.metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.metric{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg)}
+.metric .v{font-size:1.35rem;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.metric .l{font-size:.78rem;color:var(--muted)}
+.metric.good .v{color:var(--ok)} .metric.warn .v{color:var(--warn)} .metric.bad .v{color:var(--bad)}
+.svgwrap{overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font:11px var(--sans);fill:var(--muted)}
+svg .axis{stroke:var(--line);stroke-width:1}
+svg .depth{fill:var(--depth);fill-opacity:.45;stroke:var(--depth);stroke-width:1}
+svg .mean{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 3;opacity:.55}
+svg .ct0{fill:var(--c0)} svg .ct1{fill:var(--c1)}
+svg text.in{fill:#fff;font-weight:700;font-size:10px}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;color:var(--muted);font-weight:600}
+td.seq{font-family:var(--mono);font-size:.78rem;word-break:break-all;min-width:200px}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;border-radius:99px;padding:1px 8px;font-size:.75rem;border:1px solid var(--line);color:var(--muted)}
+.tag.bad{color:var(--bad);border-color:var(--bad)} .tag.warn{color:var(--warn);border-color:var(--warn)}
+details{margin-top:10px} summary{cursor:pointer;font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.note{font-size:.84rem;color:var(--muted)}
+
+/* ---------- printable sheet ---------- */
+.sheet{background:#fff;color:#000;border:1px solid var(--line);border-radius:8px;padding:12mm;max-width:210mm;margin:0 auto}
+.sheet h3{margin:0 0 2mm;font-size:15pt}
+.sheet p{margin:0 0 4mm;font-size:10pt;color:#222}
+.cuts{display:flex;flex-wrap:wrap;padding-right:1px}
+.sheet{--s:5mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cut{border:1px dashed #555;margin:0 -1px -1px 0;padding:2.2mm 2.5mm;display:flex;gap:2.5mm;align-items:center;
+  white-space:nowrap;break-inside:avoid;page-break-inside:avoid;color:#000}
+.cut .n{font:7pt var(--sans);color:#666;min-width:6mm;text-align:right}
+.cut .bases{display:flex}
+.b{display:block;width:var(--s);height:var(--s);line-height:calc(var(--s) - .5mm);text-align:center;
+  font:700 calc(var(--s) * .6)/calc(var(--s) - .5mm) var(--mono);border:.25mm solid #222;margin-left:-.25mm;color:#000}
+.b:first-child{margin-left:0}
+.b.A{background:#8fd18f}.b.C{background:#8ab6f0}.b.G{background:#f6cc6e}.b.T{background:#f28b8b}
+.sheet.plain .b{background:#fff}
+.key{break-before:page;page-break-before:always;margin-top:10mm}
+.key pre{font:8.5pt/1.5 var(--mono);white-space:pre-wrap;margin:0 0 4mm;word-break:break-all}
+.key .reads{columns:4;font:7.5pt/1.4 var(--mono);column-gap:6mm}
+.key .reads div{break-inside:avoid}
+
+@page{size:A4;margin:12mm}
+@media print{
+  :root{padding:0}
+  html,body{background:#fff}
+  .screen-only{display:none!important}
+  #view-print{display:block!important}
+  .sheet{border:none;border-radius:0;padding:0;max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="screen-only">
+    <h1>De novo assembly: shotgun simulator</h1>
+    <p class="lede">Paste or generate a genome, simulate shotgun reads at a chosen coverage, assemble them with a de Bruijn graph in your browser, then print the raw reads for students to cut out and assemble by hand.</p>
+
+    <section class="panel" aria-labelledby="h-input">
+      <h2 id="h-input">1. Genome</h2>
+      <label for="genome">Sequence <span class="hint">(plain DNA or FASTA; anything other than A, C, G, T is ignored)</span></label>
+      <textarea id="genome" spellcheck="false" aria-describedby="gstat"></textarea>
+      <div class="note" id="gstat" style="margin-top:4px"></div>
+      <div class="row" style="margin-top:10px">
+        <div style="width:130px"><label for="genLen">Random length</label><input id="genLen" type="number" min="50" max="20000" value="240"></div>
+        <div style="width:150px"><label for="genRep">Repeat length <span class="hint">(0 = none)</span></label><input id="genRep" type="number" min="0" max="2000" value="0"></div>
+        <div style="align-self:flex-end"><button id="btnGen" type="button">Generate random genome</button></div>
+      </div>
+      <p class="note" style="margin:8px 0 0">A repeat is a segment copied to two places in the genome. When it is longer than the k-mer size, the graph branches and the assembly breaks there.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-ctrl">
+      <h2 id="h-ctrl">2. Sequencing and assembly settings</h2>
+      <div class="grid">
+        <div><label for="cov">Average coverage (×)</label><input id="cov" type="number" min="0.5" max="100" step="0.5" value="8"></div>
+        <div><label for="rlen">Read length (bp)</label><input id="rlen" type="number" min="10" max="500" value="30"></div>
+        <div><label for="kmer">k-mer size <span class="hint">(updates live)</span></label><input id="kmer" type="number" min="5" max="500" value="15"></div>
+        <div><label for="seed">Random seed</label><input id="seed" type="number" min="1" step="1" value="1"></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label class="check"><input id="rcOn" type="checkbox" checked> Include reverse-complement reads</label>
+        <span class="hint">Unticked: every read comes from the forward strand.</span>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button id="btnRun" class="primary" type="button">Simulate reads and assemble</button>
+        <button id="btnNew" type="button">New seed and run</button>
+      </div>
+      <p id="status" class="status ok" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="tabs screen-only" role="tablist">
+    <button class="tab" role="tab" id="tab-asm" aria-selected="true" aria-controls="view-asm" type="button">Assembly and metrics</button>
+    <button class="tab" role="tab" id="tab-print" aria-selected="false" aria-controls="view-print" type="button">Printable reads</button>
+  </div>
+
+  <div id="view-asm" class="screen-only" role="tabpanel" aria-labelledby="tab-asm">
+    <section class="panel"><h2>Metrics</h2><div id="metrics" class="metrics"></div>
+      <p class="note" id="metricNote" style="margin:10px 0 0"></p></section>
+
+    <section class="panel"><h2>Read depth along the genome</h2>
+      <div class="svgwrap" id="depthSvg"></div>
+      <p class="note" style="margin:6px 0 0">Dashed line: mean depth. Dips to zero are places where no read starts close enough to bridge the neighbouring reads, so the assembly has to break there.</p></section>
+
+    <section class="panel"><h2>Contigs on the genome</h2>
+      <div class="svgwrap" id="mapSvg"></div>
+      <div class="legend"><span>Each bar is a contig placed on the true genome (known here because we simulated it).</span></div></section>
+
+    <section class="panel"><h2>Contigs</h2>
+      <div style="overflow-x:auto"><table id="ctable"></table></div>
+      <details><summary>FASTA output</summary>
+        <textarea id="fasta" readonly spellcheck="false"></textarea>
+        <div class="row" style="margin-top:6px"><button id="btnCopy" type="button">Copy FASTA</button><span id="copyMsg" class="note"></span></div>
+      </details>
+      <details><summary>Simulated reads (with true position and strand)</summary>
+        <textarea id="readsFasta" readonly spellcheck="false"></textarea>
+      </details>
+    </section>
+  </div>
+
+  <div id="view-print" hidden role="tabpanel" aria-labelledby="tab-print">
+    <div class="panel screen-only">
+      <h2>Printable reads</h2>
+      <div class="row">
+        <label class="check"><input id="showNum" type="checkbox" checked> Number the reads</label>
+        <label class="check"><input id="showCol" type="checkbox" checked> Colour the bases</label>
+        <label class="check"><input id="showKey" type="checkbox"> Add teacher’s answer key on a separate page</label>
+        <button id="btnPrint" class="primary" type="button">Print</button>
+      </div>
+      <p class="note" style="margin:8px 0 0">A4 portrait. Dashed lines are cutting guides. If the Print button does nothing, open this page in its own browser tab and press Ctrl+P (or Cmd+P).</p>
+    </div>
+    <div id="sheet" class="sheet"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const COMP = {A:"T",C:"G",G:"C",T:"A"};
+let state = null;
+
+/* ---------- helpers ---------- */
+function rc(s){let o="";for(let i=s.length-1;i>=0;i--)o+=COMP[s[i]];return o}
+function cleanSeq(raw){
+  const noHdr = raw.replace(/^>.*$/gm,"");
+  const up = noHdr.toUpperCase().replace(/\s+/g,"");
+  const g = up.replace(/[^ACGT]/g,"");
+  return {g, removed: up.length - g.length};
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function randomSeq(n,rnd){let s="";for(let i=0;i<n;i++)s+="ACGT"[Math.floor(rnd()*4)];return s}
+function makeGenome(L,R,rnd){
+  if(R<=0||L<4*R) return randomSeq(L,rnd);
+  const seg=randomSeq(R,rnd), rest=L-2*R;
+  const a=Math.floor(rest*0.2+rnd()*rest*0.2), b=Math.floor(rest*0.2+rnd()*rest*0.2), c=rest-a-b;
+  return randomSeq(a,rnd)+seg+randomSeq(b,rnd)+seg+randomSeq(c,rnd);
+}
+function fmt(n){return Number(n).toLocaleString("en-GB")}
+function status(msg,err){const s=$("status");s.textContent=msg;s.className="status "+(err?"err":"ok")}
+function findAll(g,s){const o=[];let i=g.indexOf(s);while(i!==-1){o.push(i);i=g.indexOf(s,i+1)}return o}
+
+/* ---------- shotgun simulation ---------- */
+function simulate(g,rl,cov,withRC,seed){
+  const rnd=mulberry32(seed);
+  const n=Math.max(1,Math.ceil(cov*g.length/rl));
+  const reads=[];
+  for(let i=0;i<n;i++){
+    const s=Math.floor(rnd()*(g.length-rl+1));
+    let seq=g.substr(s,rl), strand="+";
+    if(withRC && rnd()<0.5){seq=rc(seq);strand="-"}
+    reads.push({id:i+1,start:s,strand,seq});
+  }
+  return reads;
+}
+
+/* ---------- de Bruijn graph (nodes = k-mers, edges = (k-1)-overlaps) ---------- */
+function assemble(reads,k,withRC){
+  const kmers=new Set();
+  const add=s=>{for(let i=0;i+k<=s.length;i++)kmers.add(s.substr(i,k))};
+  for(const r of reads){add(r.seq); if(withRC) add(rc(r.seq));}
+  const B="ACGT";
+  const succ=km=>{const p=km.slice(1),o=[];for(const b of B){const x=p+b;if(kmers.has(x))o.push(x)}return o};
+  const pred=km=>{const p=km.slice(0,-1),o=[];for(const b of B){const x=b+p;if(kmers.has(x))o.push(x)}return o};
+  const visited=new Set(), contigs=[];
+  let branching=0;
+  const walk=start=>{
+    let seq=start, cur=start; visited.add(start);
+    for(;;){
+      const s=succ(cur); if(s.length!==1)break;
+      const nx=s[0]; if(visited.has(nx))break;
+      if(pred(nx).length!==1)break;
+      visited.add(nx); seq+=nx[k-1]; cur=nx;
+    }
+    return seq;
+  };
+  for(const km of kmers){
+    const p=pred(km), s=succ(km);
+    if(p.length>1||s.length>1) branching++;
+    const isStart = p.length!==1 || succ(p[0]).length!==1;
+    if(isStart && !visited.has(km)) contigs.push(walk(km));
+  }
+  for(const km of kmers) if(!visited.has(km)) contigs.push(walk(km)); // isolated cycles
+  return {contigs, distinct:kmers.size, branching};
+}
+
+/* ---------- run ---------- */
+function readInputs(){
+  const {g,removed}=cleanSeq($("genome").value);
+  return {
+    g, removed,
+    cov:+$("cov").value, rl:+$("rlen").value, k:+$("kmer").value,
+    seed:Math.max(1,Math.floor(+$("seed").value)||1), withRC:$("rcOn").checked
+  };
+}
+function run(){
+  const v=readInputs();
+  if(v.g.length<20){status("Genome too short: enter at least 20 bases of A, C, G or T.",true);return}
+  if(!(v.rl>=10&&v.rl<=v.g.length)){status("Read length must be at least 10 and no longer than the genome ("+v.g.length+" bp).",true);return}
+  if(!(v.cov>0)){status("Coverage must be above 0.",true);return}
+  if(!(v.k>=5&&v.k<=v.rl)){status("k must be between 5 and the read length ("+v.rl+").",true);return}
+  const reads=simulate(v.g,v.rl,v.cov,v.withRC,v.seed);
+  state={genome:v.g,readLen:v.rl,cov:v.cov,withRC:v.withRC,seed:v.seed,reads};
+  const warn=reads.length>400?" That is a lot of reads to cut out; consider a lower coverage or a shorter genome.":"";
+  status("Simulated "+fmt(reads.length)+" reads."+warn,false);
+  renderReadsFasta(); renderSheet(); assembleRender();
+}
+function assembleRender(){
+  if(!state) return;
+  const k=+$("kmer").value, rl=state.readLen;
+  if(!(k>=5&&k<=rl)){status("k must be between 5 and the read length ("+rl+").",true);return}
+  const g=state.genome, L=g.length;
+  const res=assemble(state.reads,k,state.withRC);
+  let list=res.contigs;
+  if(state.withRC){
+    const seen=new Set();
+    list=list.filter(c=>{const r=rc(c),key=c<r?c:r;if(seen.has(key))return false;seen.add(key);return true});
+  }
+  const covered=new Uint8Array(L);
+  const out=list.map(c=>{
+    let seq=c, occ=findAll(g,seq);
+    if(!occ.length){const r=rc(c),o2=findAll(g,r);if(o2.length){seq=r;occ=o2}}
+    for(const p of occ)for(let i=p;i<p+seq.length;i++)covered[i]=1;
+    return {seq,occ,len:seq.length};
+  });
+  out.sort((a,b)=>b.len-a.len);
+
+  // read depth and read coverage
+  const depth=new Int32Array(L+1);
+  for(const r of state.reads){depth[r.start]++;depth[r.start+rl]--}
+  const dp=new Array(L);let run=0,maxD=0,readCov=0,gaps=0,prevZero=false;
+  for(let i=0;i<L;i++){run+=depth[i];dp[i]=run;if(run>maxD)maxD=run;if(run>0)readCov++;
+    const z=run===0; if(z&&!prevZero)gaps++; prevZero=z}
+  const realised=state.reads.length*rl/L;
+  const expUncov=Math.exp(-realised)*100, obsUncov=(1-readCov/L)*100;
+
+  // contig stats
+  const lens=out.map(c=>c.len), total=lens.reduce((a,b)=>a+b,0);
+  let n50=0,acc=0;for(const l of lens){acc+=l;if(acc>=total/2){n50=l;break}}
+  const recovered=covered.reduce((a,b)=>a+b,0)/L*100;
+  const chimeric=out.filter(c=>!c.occ.length).length;
+  const repeats=out.filter(c=>c.occ.length>1).length;
+  const rev=state.reads.filter(r=>r.strand==="-").length;
+
+  const M=(v,l,cls)=>`<div class="metric ${cls||""}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  $("metrics").innerHTML=
+    M(fmt(L)+" bp","genome length")+
+    M(fmt(state.reads.length),"reads of "+rl+" bp"+(state.withRC?" ("+rev+" reverse)":""))+
+    M(realised.toFixed(1)+"×","realised coverage")+
+    M(fmt(res.distinct),"distinct "+k+"-mers")+
+    M(fmt(res.branching),"branching k-mers",res.branching?"warn":"")+
+    M(fmt(out.length),"contigs",out.length===1?"good":"")+
+    M(fmt(total)+" bp","total contig length")+
+    M(fmt(lens[0]||0)+" bp","longest contig")+
+    M(fmt(n50)+" bp","N50")+
+    M(recovered.toFixed(1)+"%","genome recovered in contigs",recovered>=99.9?"good":(recovered<80?"warn":""))+
+    M(obsUncov.toFixed(1)+"%","bases with no read ("+gaps+" gap"+(gaps===1?"":"s")+")",gaps?"warn":"good")+
+    M(fmt(chimeric),"contigs not found in genome",chimeric?"bad":"good");
+  $("metricNote").textContent=
+    "Lander–Waterman expects about "+expUncov.toFixed(1)+"% of bases to have no read at "+realised.toFixed(1)+"× coverage; this run gave "+obsUncov.toFixed(1)+"%."+
+    (repeats?" "+repeats+" contig"+(repeats===1?" occurs":"s occur")+" more than once in the genome (repeat).":"")+
+    (state.withRC?" Reads were added to the graph in both orientations and each contig is reported once, in genome orientation.":"");
+
+  $("depthSvg").innerHTML=depthSVG(dp,L,maxD,realised);
+  $("mapSvg").innerHTML=mapSVG(L,out.slice(0,300));
+  renderTable(out);
+  $("fasta").value=out.map((c,i)=>">contig_"+(i+1)+" len="+c.len+"\n"+c.seq).join("\n");
+}
+
+/* ---------- SVG plots ---------- */
+function depthSVG(dp,L,maxD,mean){
+  const W=1000,H=90,top=8,bot=18,bins=Math.min(L,W);
+  const ph=H-top-bot, mx=Math.max(maxD,1);
+  let pts=`0,${top+ph} `;
+  for(let b=0;b<bins;b++){
+    const s=Math.floor(b*L/bins), e=Math.max(s+1,Math.floor((b+1)*L/bins));
+    let m=0;for(let i=s;i<e;i++)if(dp[i]>m)m=dp[i];
+    const x0=b/bins*W,x1=(b+1)/bins*W,y=top+ph-(m/mx)*ph;
+    pts+=`${x0.toFixed(1)},${y.toFixed(1)} ${x1.toFixed(1)},${y.toFixed(1)} `;
+  }
+  pts+=`${W},${top+ph}`;
+  const my=top+ph-(mean/mx)*ph;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Read depth along the genome">
+    <line class="axis" x1="0" x2="${W}" y1="${top+ph}" y2="${top+ph}"/>
+    <polygon class="depth" points="${pts}"/>
+    <line class="mean" x1="0" x2="${W}" y1="${my.toFixed(1)}" y2="${my.toFixed(1)}"/>
+    <text x="0" y="${H-4}">1</text><text x="${W}" y="${H-4}" text-anchor="end">${fmt(L)} bp</text>
+    <text x="${W-4}" y="${top+8}" text-anchor="end">max depth ${maxD}</text></svg>`;
+}
+function mapSVG(L,out){
+  const W=1000, lanes=[], items=[];
+  out.forEach((c,i)=>c.occ.forEach(p=>items.push({s:p,e:p+c.len,i})));
+  items.sort((a,b)=>a.s-b.s||b.e-a.e);
+  for(const it of items){let l=lanes.findIndex(end=>end<=it.s);if(l<0){l=lanes.length;lanes.push(0)}lanes[l]=it.e;it.l=l}
+  const H=Math.max(1,lanes.length)*16+34;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Contigs placed on the genome"><line class="axis" x1="0" x2="${W}" y1="10" y2="10"/>
+    <text x="0" y="${H-4}">1</text><text x="${W}" y="${H-4}" text-anchor="end">${fmt(L)} bp</text>`;
+  for(const it of items){
+    const x=it.s/L*W, w=Math.max(2,(it.e-it.s)/L*W), y=20+it.l*16;
+    svg+=`<rect class="ct${it.i%2}" x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="12" rx="2"><title>contig_${it.i+1}: ${it.s+1}–${it.e}</title></rect>`;
+    if(w>38) svg+=`<text class="in" x="${(x+4).toFixed(1)}" y="${y+9.5}">C${it.i+1}</text>`;
+  }
+  return svg+"</svg>";
+}
+
+/* ---------- tables / text ---------- */
+function renderTable(out){
+  const shown=out.slice(0,200);
+  let h="<tr><th>Contig</th><th>Length</th><th>Genome position</th><th>Sequence</th></tr>";
+  shown.forEach((c,i)=>{
+    let pos;
+    if(!c.occ.length) pos=`<span class="tag bad">not in genome</span>`;
+    else pos=c.occ.map(p=>(p+1)+"–"+(p+c.len)).join(", ")+(c.occ.length>1?` <span class="tag warn">repeat ×${c.occ.length}</span>`:"");
+    const s=c.len>400?c.seq.slice(0,400)+"…":c.seq;
+    h+=`<tr><td>contig_${i+1}</td><td class="num">${fmt(c.len)} bp</td><td class="num">${pos}</td><td class="seq">${s}</td></tr>`;
+  });
+  if(out.length>shown.length) h+=`<tr><td colspan="4" class="note">Showing the longest ${shown.length} of ${fmt(out.length)} contigs. The FASTA output has all of them.</td></tr>`;
+  $("ctable").innerHTML=h;
+}
+function renderReadsFasta(){
+  $("readsFasta").value=state.reads.map(r=>">read_"+r.id+" start="+(r.start+1)+" strand="+r.strand+"\n"+r.seq).join("\n");
+}
+
+/* ---------- printable sheet ---------- */
+function renderSheet(){
+  if(!state){return}
+  const showNum=$("showNum").checked, showKey=$("showKey").checked, g=state.genome;
+  let h=`<h3>De novo assembly exercise: reads</h3>
+    <p>${fmt(state.reads.length)} reads, ${state.readLen} bases each. Cut along the dashed lines, then overlap the reads to rebuild the original sequence.`+
+    (state.withRC?" Some reads were sequenced from the opposite strand: if a read matches nothing, try its reverse complement (read it backwards and swap A↔T, C↔G).":"")+
+    ` Write down how many pieces you end up with, and what stopped you joining them.</p><div class="cuts">`;
+  for(const r of state.reads){
+    let bs="";for(const ch of r.seq)bs+=`<i class="b ${ch}">${ch}</i>`;
+    h+=`<div class="cut">${showNum?`<span class="n">${r.id}</span>`:""}<div class="bases">${bs}</div></div>`;
+  }
+  h+="</div>";
+  if(showKey){
+    h+=`<div class="key"><h3>Teacher’s answer key</h3><p>Genome (${fmt(g.length)} bp), 60 bases per line. Settings: coverage ${state.cov}×, read length ${state.readLen}, seed ${state.seed}, reverse-complement reads ${state.withRC?"on":"off"}.</p><pre>`;
+    for(let i=0;i<g.length;i+=60){h+=String(i+1).padStart(6," ")+"  "+g.substr(i,60)+"\n"}
+    h+=`</pre><p>Read, start position, strand:</p><div class="reads">`;
+    for(const r of state.reads)h+=`<div>${r.id}: ${r.start+1} ${r.strand}</div>`;
+    h+="</div></div>";
+  }
+  const sz=Math.max(2.2,Math.min(6.5,172/state.readLen));
+  $("sheet").style.setProperty("--s",sz.toFixed(2)+"mm");
+  $("sheet").classList.toggle("plain",!$("showCol").checked);
+  $("sheet").innerHTML=h;
+}
+
+/* ---------- UI wiring ---------- */
+function showTab(which){
+  const asm=which==="asm";
+  $("view-asm").hidden=!asm; $("view-print").hidden=asm;
+  $("tab-asm").setAttribute("aria-selected",asm); $("tab-print").setAttribute("aria-selected",!asm);
+}
+function genomeStat(){
+  const {g,removed}=cleanSeq($("genome").value);
+  $("gstat").textContent=fmt(g.length)+" bp"+(removed?" ("+removed+" other characters ignored)":"");
+}
+function generate(){
+  const L=Math.max(50,Math.min(20000,Math.floor(+$("genLen").value)||240));
+  const R=Math.max(0,Math.floor(+$("genRep").value)||0);
+  if(R>0&&L<4*R){status("The repeat length must be at most a quarter of the genome length.",true);return false}
+  const rnd=mulberry32(Math.floor(Math.random()*2147483647)+1);
+  $("genome").value=makeGenome(L,R,rnd).replace(/(.{80})/g,"$1\n").trim();
+  genomeStat();return true;
+}
+$("btnGen").addEventListener("click",()=>{if(generate())run()});
+$("btnRun").addEventListener("click",run);
+$("btnNew").addEventListener("click",()=>{$("seed").value=Math.floor(Math.random()*99999)+1;run()});
+$("genome").addEventListener("input",genomeStat);
+$("kmer").addEventListener("input",()=>{if(state)assembleRender()});
+$("tab-asm").addEventListener("click",()=>showTab("asm"));
+$("tab-print").addEventListener("click",()=>showTab("print"));
+$("showNum").addEventListener("change",renderSheet);
+$("showCol").addEventListener("change",renderSheet);
+$("showKey").addEventListener("change",renderSheet);
+$("btnPrint").addEventListener("click",()=>{try{window.print()}catch(e){alert("Printing was blocked here. Open the page in its own browser tab and press Ctrl+P (or Cmd+P).")}});
+$("btnCopy").addEventListener("click",async()=>{
+  const ta=$("fasta");let ok=false;
+  try{await navigator.clipboard.writeText(ta.value);ok=true}catch(e){}
+  if(!ok){try{ta.select();ok=document.execCommand("copy")}catch(e){}}
+  $("copyMsg").textContent=ok?"Copied.":"Copy was blocked; the text is selected, so press Ctrl+C (or Cmd+C).";
+  if(!ok)ta.select();
+});
+
+generate(); run();
+})();
+</script>
+</body>
+</html>
